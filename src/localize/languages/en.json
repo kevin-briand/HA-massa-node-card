@@ -1,0 +1,14 @@
+{
+  "status": "Status",
+  "activeRolls": "Active rolls",
+  "blockProduced": "Block produced",
+  "blockFailed": "Block missed",
+  "walletAmount": "Wallet amount",
+  "online": "Online",
+  "offline": "Offline",
+  "error": {
+    "noIp": "Param ip not provided",
+    "noPort": "Param port not provided",
+    "noWallet": "Param wallet_address not provided"
+  }
+}

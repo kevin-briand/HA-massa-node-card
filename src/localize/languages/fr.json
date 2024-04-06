@@ -1,0 +1,14 @@
+{
+  "status": "Status",
+  "activeRolls": "Rolls actif",
+  "blockProduced": "Bloc produit",
+  "blockFailed": "Bloc manqué",
+  "walletAmount": "Montant du portefeuille",
+  "online": "En ligne",
+  "offline": "Hors ligne",
+  "error": {
+    "noIp": "Param ip non fourni",
+    "noPort": "Param port non fourni",
+    "noWallet": "Param wallet_address non fourni"
+  }
+}
