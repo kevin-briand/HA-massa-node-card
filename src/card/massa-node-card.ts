@@ -1,12 +1,14 @@
 import { LitElement, html, type TemplateResult, css } from 'lit'
 import { type HomeAssistant } from 'custom-card-helpers'
 import { customElement, property } from 'lit/decorators.js'
-import { getAddressesQuery } from '../api/queries/get-addresses-query'
-import { type AddressesInfo } from '../api/dto/addresses-info'
+import { getAddressesQuery } from '../api/node/queries/get-addresses-query'
+import { type AddressesInfo } from '../api/node/dto/addresses-info'
 import { type HassConfigWithParams } from '../hass/dto/hass-config-with-params'
-import { getStatusQuery } from '../api/queries/get-status-query'
-import { type StatusInfo } from '../api/dto/status-info'
+import { getStatusQuery } from '../api/node/queries/get-status-query'
+import { type StatusInfo } from '../api/node/dto/status-info'
 import { localize } from '../localize/localize'
+import { getPriceQuery } from '../api/bitget/queries/get-price-query'
+import { type PriceInfo } from '../api/bitget/dto/price-info'
 
 @customElement('massa-node-card')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -15,6 +17,7 @@ class MassaNodeCard extends LitElement {
   @property() public config!: HassConfigWithParams
   private nodeResult: StatusInfo | undefined = undefined
   private addressResult: AddressesInfo | undefined = undefined
+  private price: PriceInfo | undefined = undefined
 
   constructor () {
     super()
@@ -49,7 +52,21 @@ class MassaNodeCard extends LitElement {
     // Update data from node
     this.nodeResult = await getStatusQuery(this.config)
     this.addressResult = await getAddressesQuery(this.config)
+    this.price = await getPriceQuery()
     this.requestUpdate()
+  }
+
+  calculatePrice (): number {
+    if (this.addressResult === undefined || this.price === undefined) {
+      return 0
+    }
+    const rolls = this.addressResult.result[0].final_roll_count
+    const wallet = Number.parseFloat(this.addressResult.result[0].final_balance)
+    if (this.price.lastPr === undefined || rolls === undefined || wallet === undefined) {
+      return 0
+    }
+    const fixedResult = ((wallet + rolls * 100) * Number.parseFloat(this.price.lastPr)).toFixed(2) ?? 0
+    return parseFloat(fixedResult)
   }
 
   render (): TemplateResult<1> {
@@ -57,9 +74,7 @@ class MassaNodeCard extends LitElement {
     if (error !== undefined) {
       return html`
         <ha-card header="Massa Node">
-          <div class="card-content">
-            ${localize(`error.${error}`, this.hass.language)}
-          </div>
+          <div class="card-content">${localize(`error.${error}`, this.hass.language)}</div>
         </ha-card>
       `
     }
@@ -83,28 +98,42 @@ class MassaNodeCard extends LitElement {
           <div class="row">
             <span>${localize('blockProduced', this.hass.language)}</span>
             <span>
-              ${this.addressResult !== undefined
-                ? this.addressResult.result[0].cycle_infos.reduce((result, data) => {
-                    result += data.ok_count
-                    return result
-                  }, 0)
-                : 0}</span>
+              ${
+                this.addressResult !== undefined
+                  ? this.addressResult.result[0].cycle_infos.reduce((result, data) => {
+                      result += data.ok_count
+                      return result
+                    }, 0)
+                  : 0
+              }</span>
           </div>
           <!-- Node Block Missed -->
           <div class="row">
             <span>${localize('blockFailed', this.hass.language)}</span>
             <spa>
-              ${this.addressResult !== undefined
-                ? this.addressResult.result[0].cycle_infos.reduce((result, data) => {
-                    result += data.nok_count
-                    return result
-                  }, 0)
-                : 0}</span>
+              ${
+                this.addressResult !== undefined
+                  ? this.addressResult.result[0].cycle_infos.reduce((result, data) => {
+                      result += data.nok_count
+                      return result
+                    }, 0)
+                  : 0
+              }</span>
           </div>
           <!-- Wallet Amount -->
           <div class="row">
             <span>${localize('walletAmount', this.hass.language)}</span>
-            <span>${this.addressResult !== undefined ? this.addressResult.result[0].final_balance : 0}</span>
+            <span>${this.addressResult !== undefined ? this.addressResult.result[0].final_balance : 0} MAS</span>
+          </div>
+          <!-- Current Price -->
+          <div class="row">
+            <span>${localize('currentPrice', this.hass.language)}</span>
+            <span>${this.price !== undefined ? this.price.lastPr : 0} USDT</span>
+          </div>
+          <!-- Total Amount -->
+          <div class="row">
+            <span>${localize('totalAmount', this.hass.language)}</span>
+            <span>${this.calculatePrice()} USDT</span>
           </div>
         </div>
       </ha-card>

@@ -4,6 +4,8 @@
   "blockProduced": "Bloc produit",
   "blockFailed": "Bloc manqué",
   "walletAmount": "Montant du portefeuille",
+  "currentPrice": "Prix actuel",
+  "totalAmount": "Montant total",
   "online": "En ligne",
   "offline": "Hors ligne",
   "error": {

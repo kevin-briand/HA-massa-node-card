@@ -4,6 +4,8 @@
   "blockProduced": "Block produced",
   "blockFailed": "Block missed",
   "walletAmount": "Wallet amount",
+  "currentPrice": "Current price",
+  "totalAmount": "total amount",
   "online": "Online",
   "offline": "Offline",
   "error": {

@@ -1,5 +1,5 @@
 import { NodeApi } from '../node-api'
-import { type HassConfigWithParams } from '../../hass/dto/hass-config-with-params'
+import { type HassConfigWithParams } from '../../../hass/dto/hass-config-with-params'
 import { type StatusInfo } from '../dto/status-info'
 
 export async function getStatusQuery (config: HassConfigWithParams): Promise<StatusInfo> {
