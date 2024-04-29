@@ -1,139 +1,138 @@
 import { LitElement, html, type TemplateResult, css } from 'lit'
 import { type HomeAssistant } from 'custom-card-helpers'
 import { customElement, property } from 'lit/decorators.js'
-import { getAddressesQuery } from '../api/node/queries/get-addresses-query'
-import { type AddressesInfo } from '../api/node/dto/addresses-info'
 import { type HassConfigWithParams } from '../hass/dto/hass-config-with-params'
-import { getStatusQuery } from '../api/node/queries/get-status-query'
-import { type StatusInfo } from '../api/node/dto/status-info'
 import { localize } from '../localize/localize'
-import { getPriceQuery } from '../api/bitget/queries/get-price-query'
-import { type PriceInfo } from '../api/bitget/dto/price-info'
+
+interface MassaNodeData {
+  status: string
+  massa_price: string
+  wallet_amount: string
+  produced_block: string
+  missed_block: string
+  active_rolls: string
+  total_amount: string
+  wallet_amount_with_rolls: string
+  total_gain_of_day: string
+}
 
 @customElement('massa-node-card')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class MassaNodeCard extends LitElement {
   @property() public hass!: HomeAssistant
   @property() public config!: HassConfigWithParams
-  private nodeResult: StatusInfo | undefined = undefined
-  private addressResult: AddressesInfo | undefined = undefined
-  private price: PriceInfo | undefined = undefined
+  massaNodeData: MassaNodeData = {
+    status: 'Offline',
+    massa_price: '0',
+    wallet_amount: '0',
+    produced_block: '0',
+    missed_block: '0',
+    active_rolls: '0',
+    total_amount: '0',
+    wallet_amount_with_rolls: '0',
+    total_gain_of_day: '0'
+  }
+  error: boolean = false
 
   constructor () {
     super()
-    // Timeout for fetch data
-    setTimeout(() => {
-      void this.updateComponents()
-    }, 500)
-
     // Interval for refetch data every minutes
     setInterval(() => {
       void this.updateComponents()
-    }, 60 * 1000)
-  }
-
-  getParamsError (): string | undefined {
-    let error: string | undefined
-    if (this.config.ip === undefined) {
-      error = 'noIp'
-    } else if (this.config.port === undefined) {
-      error = 'noPort'
-    } else if (this.config.wallet_address === undefined) {
-      error = 'noWallet'
-    }
-    return error
+    }, 30 * 1000)
+    // First refresh
+    setTimeout(async () => { await this.updateComponents() }, 100)
   }
 
   async updateComponents (): Promise<void> {
-    if (this.getParamsError() !== undefined) {
-      return
+    // Update data from sensors
+    this.error = false
+    const states = this.hass.states
+    let data = {}
+    Object.keys(this.massaNodeData).forEach((key) => {
+      // If sensor is not defined
+      if (!states[`sensor.massa_node_${key}`]) {
+        this.error = true
+        return
+      }
+      data = {
+        ...data,
+        [key]: states[`sensor.massa_node_${key}`].state
+      }
+    })
+    if (!this.error) {
+      this.massaNodeData = data as MassaNodeData
     }
-
-    // Update data from node
-    this.nodeResult = await getStatusQuery(this.config)
-    this.addressResult = await getAddressesQuery(this.config)
-    this.price = await getPriceQuery()
     this.requestUpdate()
   }
 
-  calculatePrice (): number {
-    if (this.addressResult === undefined || this.price === undefined) {
-      return 0
+  colorByValue (value: number) {
+    // Positive/negative value coloring
+    let color = ''
+    let operator = ''
+    if (value > 0) {
+      color = 'green'
+      operator = '+'
+    } else if (value < 0) {
+      color = 'red'
+      operator = '-'
     }
-    const rolls = this.addressResult.result[0].final_roll_count
-    const wallet = Number.parseFloat(this.addressResult.result[0].final_balance)
-    if (this.price.lastPr === undefined || rolls === undefined || wallet === undefined) {
-      return 0
-    }
-    const fixedResult = ((wallet + rolls * 100) * Number.parseFloat(this.price.lastPr)).toFixed(2) ?? 0
-    return parseFloat(fixedResult)
+    return html`
+      <span style="${color ? 'color: ' + color : ''}">
+        ${operator}${value}
+      </span>
+    `
   }
 
   render (): TemplateResult<1> {
-    const error = this.getParamsError()
-    if (error !== undefined) {
+    if (this.error) {
       return html`
-        <ha-card header="Massa Node">
-          <div class="card-content">${localize(`error.${error}`, this.hass.language)}</div>
-        </ha-card>
-      `
+      <ha-card header="Massa Node">
+        <div class="card-content">
+          ${localize('sensorNotFound', this.hass.language)}
+        </div>
+      </ha-card>
+    `
     }
-
     return html`
       <ha-card header="Massa Node">
         <div class="card-content">
           <!-- Node Status -->
           <div class="row">
             <span>${localize('status', this.hass.language)}</span>
-            <span style="color: ${this.nodeResult !== undefined ? 'green' : 'red'}">
-              ${localize(this.nodeResult !== undefined ? 'online' : 'offline', this.hass.language)}
+            <span style="color: ${this.massaNodeData.status !== 'Offline' ? 'green' : 'red'}">
+              ${localize(this.massaNodeData.status.toLowerCase(), this.hass.language)}
             </span>
           </div>
           <!-- Node Active rolls -->
           <div class="row">
             <span>${localize('activeRolls', this.hass.language)}</span>
-            <span>${this.addressResult !== undefined ? this.addressResult.result[0].candidate_roll_count : 0}</span>
+            <span>${this.massaNodeData.active_rolls}</span>
           </div>
-          <!-- Node Block Produced -->
+          <!-- Node Block Produced/Missed -->
           <div class="row">
-            <span>${localize('blockProduced', this.hass.language)}</span>
-            <span>
-              ${
-                this.addressResult !== undefined
-                  ? this.addressResult.result[0].cycle_infos.reduce((result, data) => {
-                      result += data.ok_count
-                      return result
-                    }, 0)
-                  : 0
-              }</span>
+            <span>${localize('blockProducedMissed', this.hass.language)}</span>
+            ${this.colorByValue(parseInt(this.massaNodeData.produced_block) - parseInt(this.massaNodeData.missed_block))}
           </div>
-          <!-- Node Block Missed -->
+          <!-- Wallet Gain -->
           <div class="row">
-            <span>${localize('blockFailed', this.hass.language)}</span>
-            <spa>
-              ${
-                this.addressResult !== undefined
-                  ? this.addressResult.result[0].cycle_infos.reduce((result, data) => {
-                      result += data.nok_count
-                      return result
-                    }, 0)
-                  : 0
-              }</span>
+            <span>${localize('gainOfDay', this.hass.language)}</span>
+            <span>${this.colorByValue(parseFloat(parseFloat(this.massaNodeData.total_gain_of_day).toFixed(2)))} MAS</span>
           </div>
-          <!-- Wallet Amount -->
-          <div class="row">
-            <span>${localize('walletAmount', this.hass.language)}</span>
-            <span>${this.addressResult !== undefined ? this.addressResult.result[0].final_balance : 0} MAS</span>
-          </div>
-          <!-- Current Price -->
+          <!-- MASSA Current Price -->
           <div class="row">
             <span>${localize('currentPrice', this.hass.language)}</span>
-            <span>${this.price !== undefined ? this.price.lastPr : 0} USDT</span>
+            <span>${this.massaNodeData.massa_price} USDT</span>
+          </div>
+          <!-- Wallet Amount -->
+          <div class="row" style="${!this.config.show_wallet_amount ? 'display: none' : ''}">
+            <span>${localize('walletAmount', this.hass.language)}</span>
+            <span>${parseFloat(this.massaNodeData.wallet_amount).toFixed(2)} MAS</span>
           </div>
           <!-- Total Amount -->
-          <div class="row">
+          <div class="row" style="${!this.config.show_wallet_amount ? 'display: none' : ''}">
             <span>${localize('totalAmount', this.hass.language)}</span>
-            <span>${this.calculatePrice()} USDT</span>
+            <span>${parseFloat(this.massaNodeData.total_amount).toFixed(2)} USDT</span>
           </div>
         </div>
       </ha-card>

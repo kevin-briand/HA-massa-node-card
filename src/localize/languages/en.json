@@ -1,16 +1,12 @@
 {
   "status": "Status",
   "activeRolls": "Active rolls",
-  "blockProduced": "Block produced",
-  "blockFailed": "Block missed",
+  "blockProducedMissed": "Block produced/missed(6 last cycles)",
   "walletAmount": "Wallet amount",
   "currentPrice": "Current price",
   "totalAmount": "total amount",
+  "gainOfDay": "Gain of the day",
   "online": "Online",
   "offline": "Offline",
-  "error": {
-    "noIp": "Param ip not provided",
-    "noPort": "Param port not provided",
-    "noWallet": "Param wallet_address not provided"
-  }
+  "sensorNotFound": "Sensor not found, the massa node integration is installed ?"
 }

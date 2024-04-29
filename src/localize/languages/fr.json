@@ -1,16 +1,12 @@
 {
   "status": "Status",
   "activeRolls": "Rolls actif",
-  "blockProduced": "Bloc produit",
-  "blockFailed": "Bloc manqué",
+  "blockProducedMissed": "Bloc produit/manqué(6 derniers cycles)",
   "walletAmount": "Montant du portefeuille",
   "currentPrice": "Prix actuel",
   "totalAmount": "Montant total",
+  "gainOfDay": "Gain du jour",
   "online": "En ligne",
   "offline": "Hors ligne",
-  "error": {
-    "noIp": "Param ip non fourni",
-    "noPort": "Param port non fourni",
-    "noWallet": "Param wallet_address non fourni"
-  }
+  "sensorNotFound": "Capteur non trouvé, l'intégration massa node est-elle installé ?"
 }
