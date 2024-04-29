@@ -18,7 +18,7 @@ interface MassaNodeData {
 
 @customElement('massa-node-card')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-class MassaNodeCard extends LitElement {
+class Massa_node_card extends LitElement {
   @property() public hass!: HomeAssistant
   @property() public config!: HassConfigWithParams
   massaNodeData: MassaNodeData = {
@@ -32,6 +32,7 @@ class MassaNodeCard extends LitElement {
     wallet_amount_with_rolls: '0',
     total_gain_of_day: '0'
   }
+
   error: boolean = false
 
   constructor () {
@@ -41,7 +42,7 @@ class MassaNodeCard extends LitElement {
       void this.updateComponents()
     }, 30 * 1000)
     // First refresh
-    setTimeout(async () => { await this.updateComponents() }, 100)
+    setTimeout(() => { void this.updateComponents() }, 100)
   }
 
   async updateComponents (): Promise<void> {
@@ -51,7 +52,7 @@ class MassaNodeCard extends LitElement {
     let data = {}
     Object.keys(this.massaNodeData).forEach((key) => {
       // If sensor is not defined
-      if (!states[`sensor.massa_node_${key}`]) {
+      if (states[`sensor.massa_node_${key}`] === undefined) {
         this.error = true
         return
       }
@@ -66,7 +67,7 @@ class MassaNodeCard extends LitElement {
     this.requestUpdate()
   }
 
-  colorByValue (value: number) {
+  colorByValue (value: number): TemplateResult<1> {
     // Positive/negative value coloring
     let color = ''
     let operator = ''
@@ -78,7 +79,7 @@ class MassaNodeCard extends LitElement {
       operator = '-'
     }
     return html`
-      <span style="${color ? 'color: ' + color : ''}">
+      <span style="${(color !== '') ? 'color: ' + color : ''}">
         ${operator}${value}
       </span>
     `

@@ -3,9 +3,9 @@ const path = require('path')
 module.exports = [
   {
     mode: 'production',
-    entry: './dist/card/massa-node-card.js',
+    entry: './dist/card/massa_node_card.js',
     output: {
-      filename: 'massa-node-card.js',
+      filename: 'massa_node_card.js',
       path: path.resolve(__dirname, 'dist')
     },
     resolve: {
