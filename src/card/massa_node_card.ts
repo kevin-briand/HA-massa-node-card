@@ -3,18 +3,8 @@ import { type HomeAssistant } from 'custom-card-helpers'
 import { customElement, property } from 'lit/decorators.js'
 import { type HassConfigWithParams } from '../hass/dto/hass-config-with-params'
 import { localize } from '../localize/localize'
-
-interface MassaNodeData {
-  status: string
-  massa_price: string
-  wallet_amount: string
-  produced_block: string
-  missed_block: string
-  active_rolls: string
-  total_amount: string
-  wallet_amount_with_rolls: string
-  total_gain_of_day: string
-}
+import { type Dialog } from '@material/mwc-dialog'
+import { type EntityData, type MassaNodeData } from './types'
 
 @customElement('massa-node-card')
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -34,15 +24,27 @@ class Massa_node_card extends LitElement {
   }
 
   error: boolean = false
+  DailyEarningsHistory: Record<string, string> = {}
 
-  constructor () {
-    super()
+  async firstUpdated (): Promise<void> {
     // Interval for refetch data every minutes
     setInterval(() => {
       void this.updateComponents()
-    }, 30 * 1000)
-    // First refresh
-    setTimeout(() => { void this.updateComponents() }, 100)
+    }, 60 * 1000)
+    await this.updateComponents()
+
+    // Add click event listener to the Daily Earning
+    const element = this.shadowRoot?.querySelector('#dailyEarning')
+    if (element == null) {
+      return
+    }
+    element.addEventListener('click', () => {
+      const dialog: Dialog | null = this.shadowRoot?.querySelector('#historyDailyEarningDialog') ?? null
+      if (dialog == null) {
+        return
+      }
+      dialog.open = true
+    })
   }
 
   async updateComponents (): Promise<void> {
@@ -64,10 +66,61 @@ class Massa_node_card extends LitElement {
     if (!this.error) {
       this.massaNodeData = data as MassaNodeData
     }
+
+    await this.getGainOfDayHistory()
+
     this.requestUpdate()
   }
 
-  colorByValue (value: number): TemplateResult<1> {
+  private async getGainOfDayHistory (): Promise<void> {
+    try {
+      // Get 7 days history for total_gain_of_day sensor
+      const currentDate = new Date()
+      currentDate.setHours(0, 0, 0)
+      const startDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const endDate = new Date(currentDate.getTime() - 60 * 1000)
+      const result = await this.hass.callApi<EntityData[][]>(
+        'GET',
+        `history/period/${startDate.toISOString()}?filter_entity_id=sensor.massa_node_total_gain_of_day&end_time=${endDate.toISOString()}`
+      )
+      let lastDate = ''
+      let maxValue = 10
+      this.DailyEarningsHistory = result[0].reduce((r: Record<string, string>, d) => {
+        const dataDate = new Date(d.last_updated).toLocaleDateString()
+        if (r[dataDate] !== undefined && d.state === '0') {
+          lastDate = dataDate
+        }
+        if (lastDate !== dataDate && (r[dataDate] === undefined || d.state !== '0')) {
+          let value = parseFloat(d.state)
+          // while state is negative, add 100 to the value
+          while (value < 0) {
+            value += 100
+          }
+          r[dataDate] = value.toString()
+          if (maxValue < value) {
+            maxValue = value
+          }
+        }
+        return r
+      }, {})
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  private calculateAverageGainOfDay (): number {
+    const keys = Object.keys(this.DailyEarningsHistory)
+    const nbOfDays = keys.length
+    if (nbOfDays === 0) {
+      return 0
+    }
+    const sum = keys.reduce((sum: number, key) => {
+      return sum + parseFloat(this.DailyEarningsHistory[key])
+    }, 0)
+    return sum / nbOfDays
+  }
+
+  private colorByValue (value: number): TemplateResult<1> {
     // Positive/negative value coloring
     let color = ''
     let operator = ''
@@ -76,24 +129,17 @@ class Massa_node_card extends LitElement {
       operator = '+'
     } else if (value < 0) {
       color = 'red'
-      operator = '-'
     }
-    return html`
-      <span style="${(color !== '') ? 'color: ' + color : ''}">
-        ${operator}${value}
-      </span>
-    `
+    return html` <span style="${color !== '' ? 'color: ' + color : ''}"> ${operator}${value} </span> `
   }
 
   render (): TemplateResult<1> {
     if (this.error) {
       return html`
-      <ha-card header="Massa Node">
-        <div class="card-content">
-          ${localize('sensorNotFound', this.hass.language)}
-        </div>
-      </ha-card>
-    `
+        <ha-card header="Massa Node">
+          <div class="card-content">${localize('sensorNotFound', this.hass.language)}</div>
+        </ha-card>
+      `
     }
     return html`
       <ha-card header="Massa Node">
@@ -113,12 +159,16 @@ class Massa_node_card extends LitElement {
           <!-- Node Block Produced/Missed -->
           <div class="row">
             <span>${localize('blockProducedMissed', this.hass.language)}</span>
-            ${this.colorByValue(parseInt(this.massaNodeData.produced_block) - parseInt(this.massaNodeData.missed_block))}
+            ${this.colorByValue(
+              parseInt(this.massaNodeData.produced_block) - parseInt(this.massaNodeData.missed_block)
+            )}
           </div>
           <!-- Wallet Gain -->
-          <div class="row">
-            <span>${localize('gainOfDay', this.hass.language)}</span>
-            <span>${this.colorByValue(parseFloat(parseFloat(this.massaNodeData.total_gain_of_day).toFixed(2)))} MAS</span>
+          <div class="row" id="dailyEarning">
+            <span>${localize('dailyEarning', this.hass.language)}</span>
+            <span
+              >${this.colorByValue(parseFloat(parseFloat(this.massaNodeData.total_gain_of_day).toFixed(2)))} MAS</span
+            >
           </div>
           <!-- MASSA Current Price -->
           <div class="row">
@@ -137,15 +187,34 @@ class Massa_node_card extends LitElement {
           </div>
         </div>
       </ha-card>
+      <!-- Daily earning history dialog -->
+      <ha-dialog id="historyDailyEarningDialog" hideactions="" flexcontent="">
+        <ha-dialog-header>
+          <ha-icon-button slot="navigationIcon" dialogaction="cancel">
+            <ha-icon icon="mdi:close"></ha-icon>
+          </ha-icon-button>
+          <span slot="title">${localize('dailyEarningHistory', this.hass.language)}</span>
+        </ha-dialog-header>
+        <div style="display: flex; flex-direction: column;">
+          ${Object.keys(this.DailyEarningsHistory).map((key) => {
+            return html`
+              <div class="dialogRow">
+                <span>${key}</span>
+                <span>${parseFloat(this.DailyEarningsHistory[key]).toFixed(2)} MAS</span>
+              </div>
+            `
+          })}
+          <div class="dialogRow">
+            <span>${localize('average', this.hass.language)}</span>
+            <span>${this.calculateAverageGainOfDay().toFixed(2)} MAS</span>
+          </div>
+        </div>
+      </ha-dialog>
     `
   }
 
   setConfig (config: HassConfigWithParams): void {
     this.config = config
-  }
-
-  getCardSize (): number {
-    return 3
   }
 
   static readonly styles = css`
@@ -154,6 +223,17 @@ class Massa_node_card extends LitElement {
       height: 40px;
       margin: 0;
       justify-content: space-between;
+    }
+    
+    .dialogRow {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    ha-icon {
+      display: flex;
+      align-content: center;
     }
   `
 }

@@ -5,7 +5,9 @@
   "walletAmount": "Montant du portefeuille",
   "currentPrice": "Prix actuel",
   "totalAmount": "Montant total",
-  "gainOfDay": "Gain du jour",
+  "dailyEarning": "Gain du jour",
+  "dailyEarningHistory": "Historique de gain journalier",
+  "average": "Moyenne",
   "online": "En ligne",
   "offline": "Hors ligne",
   "sensorNotFound": "Capteur non trouvé, l'intégration massa node est-elle installé ?"

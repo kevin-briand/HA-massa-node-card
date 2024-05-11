@@ -5,7 +5,9 @@
   "walletAmount": "Wallet amount",
   "currentPrice": "Current price",
   "totalAmount": "total amount",
-  "gainOfDay": "Gain of the day",
+  "dailyEarning": "Daily earning",
+  "dailyEarningHistory": "Daily earning history",
+  "average": "Average",
   "online": "Online",
   "offline": "Offline",
   "sensorNotFound": "Sensor not found, the massa node integration is installed ?"
