@@ -2,7 +2,7 @@
   "status": "Status",
   "activeRolls": "Active rolls",
   "blockProducedMissed": "Block produced/missed(6 last cycles)",
-  "walletAmount": "Wallet amount",
+  "walletAmount": "Wallet amount (rolls included)",
   "currentPrice": "Current price",
   "totalAmount": "total amount",
   "dailyEarning": "Daily earning",
@@ -10,5 +10,9 @@
   "average": "Average",
   "online": "Online",
   "offline": "Offline",
-  "sensorNotFound": "Sensor not found, the massa node integration is installed ?"
+  "sensorNotFound": "Sensor not found, the massa node integration is installed ?",
+  "editor": {
+    "showWalletAmount": "Show wallet amount",
+    "integrationNotFound": "Could not establish a connection with the massa node integration. Please check if it is installed and running."
+  }
 }

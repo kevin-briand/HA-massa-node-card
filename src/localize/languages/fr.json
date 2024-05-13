@@ -2,7 +2,7 @@
   "status": "Status",
   "activeRolls": "Rolls actif",
   "blockProducedMissed": "Bloc produit/manqué(6 derniers cycles)",
-  "walletAmount": "Montant du portefeuille",
+  "walletAmount": "Montant du portefeuille (rolls inclus)",
   "currentPrice": "Prix actuel",
   "totalAmount": "Montant total",
   "dailyEarning": "Gain du jour",
@@ -10,5 +10,9 @@
   "average": "Moyenne",
   "online": "En ligne",
   "offline": "Hors ligne",
-  "sensorNotFound": "Capteur non trouvé, l'intégration massa node est-elle installé ?"
+  "sensorNotFound": "Capteur non trouvé, l'intégration massa node est-elle installé ?",
+  "editor": {
+    "showWalletAmount": "Afficher le montant du portefeuille",
+    "integrationNotFound": "Impossible d'établir une connection avec l'intégration Massa Node. Veuillez vérifier si il est bien installé et en fonction."
+  }
 }

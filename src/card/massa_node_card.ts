@@ -1,27 +1,18 @@
 import { LitElement, html, type TemplateResult, css } from 'lit'
 import { type HomeAssistant } from 'custom-card-helpers'
 import { customElement, property } from 'lit/decorators.js'
-import { type HassConfigWithParams } from '../hass/dto/hass-config-with-params'
 import { localize } from '../localize/localize'
 import { type Dialog } from '@material/mwc-dialog'
-import { type EntityData, type MassaNodeData } from './types'
+import { type EntityData, HassConfigWithParams, type MassaNodeData } from './types';
+import './massa_node_card_editor'
+import { defaultMassaNodeData, entityPrefix, massaNodeCard, massaNodeCardEditor } from './consts';
 
-@customElement('massa-node-card')
+@customElement(massaNodeCard)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Massa_node_card extends LitElement {
   @property() public hass!: HomeAssistant
   @property() public config!: HassConfigWithParams
-  massaNodeData: MassaNodeData = {
-    status: 'Offline',
-    massa_price: '0',
-    wallet_amount: '0',
-    produced_block: '0',
-    missed_block: '0',
-    active_rolls: '0',
-    total_amount: '0',
-    wallet_amount_with_rolls: '0',
-    total_gain_of_day: '0'
-  }
+  massaNodeData: MassaNodeData = defaultMassaNodeData
 
   error: boolean = false
   DailyEarningsHistory: Record<string, string> = {}
@@ -54,13 +45,13 @@ class Massa_node_card extends LitElement {
     let data = {}
     Object.keys(this.massaNodeData).forEach((key) => {
       // If sensor is not defined
-      if (states[`sensor.massa_node_${key}`] === undefined) {
+      if (states[entityPrefix + key] === undefined) {
         this.error = true
         return
       }
       data = {
         ...data,
-        [key]: states[`sensor.massa_node_${key}`].state
+        [key]: states[entityPrefix + key].state
       }
     })
     if (!this.error) {
@@ -178,7 +169,10 @@ class Massa_node_card extends LitElement {
           <!-- Wallet Amount -->
           <div class="row" style="${!this.config.show_wallet_amount ? 'display: none' : ''}">
             <span>${localize('walletAmount', this.hass.language)}</span>
-            <span>${parseFloat(this.massaNodeData.wallet_amount).toFixed(2)} MAS</span>
+            <span>
+              ${parseFloat(this.massaNodeData.wallet_amount).toFixed(2)}
+                (${parseFloat(this.massaNodeData.wallet_amount_with_rolls).toFixed(2)}) MAS
+            </span>
           </div>
           <!-- Total Amount -->
           <div class="row" style="${!this.config.show_wallet_amount ? 'display: none' : ''}">
@@ -213,8 +207,14 @@ class Massa_node_card extends LitElement {
     `
   }
 
+  public static async getConfigElement () {
+    await import('./massa_node_card_editor')
+    return document.createElement(massaNodeCardEditor)
+  }
+
   setConfig (config: HassConfigWithParams): void {
     this.config = config
+    this.requestUpdate()
   }
 
   static readonly styles = css`
@@ -237,3 +237,11 @@ class Massa_node_card extends LitElement {
     }
   `
 }
+
+(window as any).customCards = (window as any).customCards || [];
+(window as any).customCards.push({
+  type: massaNodeCard,
+  name: 'Massa Node Card',
+  description: 'Card to follow your massa node.',
+  preview: true
+})

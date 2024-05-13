@@ -1,3 +1,5 @@
+import type { HassConfig } from 'home-assistant-js-websocket/dist/types'
+
 export interface MassaNodeData {
   status: string
   massa_price: string
@@ -28,4 +30,15 @@ interface Context {
   id: string
   parent_id: any
   user_id: any
+}
+
+export type CardConfig = CardParams & {
+  type: string
+}
+
+export type HassConfigWithParams = HassConfig & CardParams
+
+export interface CardParams {
+  // Show wallet amount and its price in the card
+  show_wallet_amount: boolean
 }
