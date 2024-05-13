@@ -5,15 +5,18 @@ This card work with the [massa_node](https://github.com/kevin-briand/massa_node)
 This card has English/French translation
 
 ![card.png](img/card.png)
-## Install
-To install the custom massa node card in the home assistant, you need to copy massa-node-card.js in the dist folder to the /config/www/ folder in the home assistant (you can use the file editor in the home assistant).
+## Installation
+### With HACS
+- Go to the HACS panel
+- select 3 dots in the top right corner > Custom repositories
+- paste https://github.com/kevin-briand/massa-node-card and select plugin category
+- find the massa-node-card integration in the list and download it
+- reload the interface
+- go to your dashboard > add card > select Massa Node Card
 
-Then add this card to the resources path: https://developers.home-assistant.io/docs/frontend/custom-ui/registering-resources/
-
-restart home assistant
-
-To finish adding the custom card to your panel, select manual and type :
-```yaml
-type: custom:massa-node-card
-show_wallet_amount: true # show wallet amount and total amount
-```
+### Manual
+To install this integration, follow these steps.
+- copy massa-node-card.js in the dist folder to the /config/www/ folder in the home assistant
+- add this card to the [resources path](https://developers.home-assistant.io/docs/frontend/custom-ui/registering-resources/)
+- reload the interface
+- go to your dashboard > add card > select Massa Node Card
