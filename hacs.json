@@ -1,6 +1,5 @@
 {
   "name": "Massa Node Card",
-  "content_in_root": false,
-  "filename": "massa_node_card.js",
+  "filename": "massa-node-card.js",
   "render_readme": true
 }

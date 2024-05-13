@@ -2,7 +2,7 @@
   "name": "massa-node-card",
   "version": "1.0.0",
   "description": "",
-  "main": "src/card/massa_node_card.ts",
+  "main": "src/card/massa-node-card.ts",
   "scripts": {
     "build": "tsc && npx webpack",
     "lint": "eslint src/**/*.ts --fix",

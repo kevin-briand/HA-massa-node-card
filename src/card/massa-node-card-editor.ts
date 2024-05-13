@@ -2,8 +2,8 @@ import { LitElement, html, type TemplateResult } from 'lit'
 import { property, customElement, state } from 'lit/decorators.js'
 import { type HomeAssistant, type LovelaceCardEditor, fireEvent } from 'custom-card-helpers'
 import { type CardConfig } from './types'
-import { localize } from '../localize/localize';
-import { defaultCardConfig, massaNodeCardEditor } from './consts';
+import { localize } from '../localize/localize'
+import { defaultCardConfig, massaNodeCardEditor } from './consts'
 
 @customElement(massaNodeCardEditor)
 export class MassaNodeCardEditor extends LitElement implements LovelaceCardEditor {
@@ -14,7 +14,7 @@ export class MassaNodeCardEditor extends LitElement implements LovelaceCardEdito
   private _config?: Partial<CardConfig>
 
   public setConfig (config?: Partial<CardConfig>): void {
-    this._config = { ...defaultCardConfig, ...config };
+    this._config = { ...defaultCardConfig, ...config }
   }
 
   protected render (): TemplateResult {

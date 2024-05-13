@@ -3,13 +3,14 @@ import { type HomeAssistant } from 'custom-card-helpers'
 import { customElement, property } from 'lit/decorators.js'
 import { localize } from '../localize/localize'
 import { type Dialog } from '@material/mwc-dialog'
-import { type EntityData, HassConfigWithParams, type MassaNodeData } from './types';
-import './massa_node_card_editor'
-import { defaultMassaNodeData, entityPrefix, massaNodeCard, massaNodeCardEditor } from './consts';
+import { type EntityData, type HassConfigWithParams, type MassaNodeData } from './types'
+import './massa-node-card-editor'
+import { defaultMassaNodeData, entityPrefix, massaNodeCard, massaNodeCardEditor } from './consts'
+import { MassaNodeCardEditor } from './massa-node-card-editor';
 
 @customElement(massaNodeCard)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-class Massa_node_card extends LitElement {
+class MassaNodeCard extends LitElement {
   @property() public hass!: HomeAssistant
   @property() public config!: HassConfigWithParams
   massaNodeData: MassaNodeData = defaultMassaNodeData
@@ -207,8 +208,8 @@ class Massa_node_card extends LitElement {
     `
   }
 
-  public static async getConfigElement () {
-    await import('./massa_node_card_editor')
+  public static async getConfigElement (): Promise<MassaNodeCardEditor> {
+    await import('./massa-node-card-editor')
     return document.createElement(massaNodeCardEditor)
   }
 
