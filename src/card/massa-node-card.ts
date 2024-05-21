@@ -226,6 +226,22 @@ class MassaNodeCard extends LitElement {
       justify-content: space-between;
     }
     
+    #dailyEarning {
+      cursor: pointer;
+    }
+    
+    .row span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .row span:nth-of-type(2) {
+      flex-grow: 1;
+      overflow: visible;
+      text-align: right;
+   }
+    
     .dialogRow {
       display: flex;
       justify-content: space-between;
